@@ -8,28 +8,49 @@ class DestinationLocation(latitude: Double, longitude: Double) {
     private val destinationLatitude: Double = latitude
     private val destinationLongitude: Double = longitude
 
-    public fun getNorthDistance(userLatitude: Double, userLongitude: Double):Int{
+    public fun getNorthDistance(userLatitude: Double, userLongitude: Double): Int {
         return calculateNorthDistanceToDestination(userLatitude, userLongitude).roundToInt()
     }
 
-    public fun getEastDistance(userLatitude: Double,userLongitude: Double):Int{
+    public fun getEastDistance(userLatitude: Double, userLongitude: Double): Int {
         return calculateEastDistanceToDestination(userLatitude, userLongitude).roundToInt()
     }
-    public fun calculateDistance(userLatitude: Double, userLongitude: Double):Float{
+
+    public fun getLinearDistance(userLatitude:Double, userLongitude: Double): Float {
+        return calculateDistance(userLatitude,userLongitude)
+    }
+    public fun calculateDistance(userLatitude: Double, userLongitude: Double): Float {
         val results: FloatArray = FloatArray(3)
         // 距離を計算
-        Location.distanceBetween(destinationLatitude, destinationLongitude, userLatitude, userLongitude, results)
+        Location.distanceBetween(
+            destinationLatitude,
+            destinationLongitude,
+            userLatitude,
+            userLongitude,
+            results
+        )
         return results[0]
     }
-    private fun calculateDistanceToDestination(userLatitude: Double, userLongitude: Double) : Float{
+//
+//    private fun calculateDistanceToDestination(userLatitude: Double, userLongitude: Double): Float {
+//
+//        val results: FloatArray = FloatArray(3)
+//
+//        // 距離を計算
+//        Location.distanceBetween(
+//            destinationLatitude,
+//            destinationLongitude,
+//            userLatitude,
+//            userLongitude,
+//            results
+//        )
+//        return results[0]
+//    }
 
-        val results: FloatArray = FloatArray(3)
-
-        // 距離を計算
-        Location.distanceBetween(destinationLatitude, destinationLongitude, userLatitude, userLongitude, results)
-        return results[0]
-    }
-    private fun calculateNorthDistanceToDestination(userLatitude: Double, userLongitude: Double): Double {
+    private fun calculateNorthDistanceToDestination(
+        userLatitude: Double,
+        userLongitude: Double
+    ): Double {
         val destinationAzimuth = calculateAzimuthToDestination(userLatitude, userLongitude)
 
         // 北極と目的地の方位を計算
@@ -41,7 +62,11 @@ class DestinationLocation(latitude: Double, longitude: Double) {
         // 180度より大きい場合は補正する
         return if (northDistance > 180.0) 360.0 - northDistance else northDistance
     }
-    private fun calculateEastDistanceToDestination(userLatitude: Double, userLongitude: Double): Double {
+
+    private fun calculateEastDistanceToDestination(
+        userLatitude: Double,
+        userLongitude: Double
+    ): Double {
         val destinationAzimuth = calculateAzimuthToDestination(userLatitude, userLongitude)
 
         // 東方向と目的地の方位を計算
@@ -53,17 +78,27 @@ class DestinationLocation(latitude: Double, longitude: Double) {
         // 180度より大きい場合は補正する
         return if (eastDistance > 180.0) 360.0 - eastDistance else eastDistance
     }
+
     private fun calculateAzimuthToDestination(userLatitude: Double, userLongitude: Double): Double {
         // 緯度経度から方位を計算
         val azimuth: Double = kotlin.math.atan2(
             kotlin.math.sin(Math.toRadians(destinationLongitude - userLongitude)),
-            kotlin.math.cos(Math.toRadians(userLatitude)) *kotlin.math.tan(Math.toRadians(destinationLatitude)) -
-                    kotlin.math.sin(Math.toRadians(userLatitude)) * kotlin.math.cos(Math.toRadians(destinationLongitude - userLongitude))
+            kotlin.math.cos(Math.toRadians(userLatitude)) * kotlin.math.tan(
+                Math.toRadians(
+                    destinationLatitude
+                )
+            ) -
+                    kotlin.math.sin(Math.toRadians(userLatitude)) * kotlin.math.cos(
+                Math.toRadians(
+                    destinationLongitude - userLongitude
+                )
+            )
         )
 
         // ラジアンを度に変換して方位を返す
         return Math.toDegrees(azimuth)
     }
+
     fun getDestinationLatitude(): Double {
         return destinationLatitude
     }
