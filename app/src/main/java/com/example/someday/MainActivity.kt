@@ -5,18 +5,21 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Observer
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     lateinit var textView: TextView
 
     val destination1 = DestinationLocation(35.680420, 138.571538)
     val waypoint = DestinationLocation(35.677837, 138.573188)
+    val Manpk = DestinationLocation(35.676020,138.572422)
     var userLatitude: Double = 0.0
     var userLongitude: Double = 0.0
 
@@ -25,21 +28,23 @@ class MainActivity : AppCompatActivity() {
 
     val CHANNEN_ID = "sample"
 
+    // waypointの付近3mを通過したかどうかを追跡するフラグ
+    private var isNearWaypoint: Boolean = false
+
+    // waypoint付近3mを通過した時点でのユーザーの位置情報
+    private var waypointPassLocation: Location? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        //通知を作成するより先に必ず実行
+        createNotificationChannel()
 
         textView = findViewById(R.id.textview)
 
-//        startButton = findViewById(R.id.button_start)
-//        stopButton = findViewById(R.id.button_stop)
-//        通知を作成するより先に必ず実行
-        createNotificationChannel()
-
-
         val distance1 = destination1.calculateDistance(userLatitude, userLongitude)
-        val pointDistance = waypoint.getLinearDistance(userLatitude, userLongitude)
+
+
 //        val buttonNotification: Button = findViewById(R.id.buttonNotification)
 //        buttonNotification.setOnClickListener {
 //
@@ -53,17 +58,41 @@ class MainActivity : AppCompatActivity() {
         locationSensor.location.observe(this, Observer {
             userLatitude = it.latitude
             userLongitude = it.longitude
+            // waypoint付近3mを通過した後の移動距離
+            var distanceAfterWaypoint: Int = 0
+
+            if (!isNearWaypoint) {
+                // waypointの付近3mを通過したかどうかをチェック
+                if (waypoint.getLinearDistance(userLatitude, userLongitude) < 3) {
+                    isNearWaypoint = true
+                    waypointPassLocation = Location(it) // ユーザーがwaypointの付近3mを通過した位置を保存
+                }
+            } else {
+                // waypointの付近3mを通過した後の移動距離を計算
+                distanceAfterWaypoint = it.distanceTo(waypointPassLocation!!).roundToInt()
+            }
+
             var NorthDistance: Int = destination1.getNorthDistance(userLatitude, userLongitude)
             var EastDistance: Int = destination1.getEastDistance(userLatitude, userLongitude)
-            var NorthPoint: Int = waypoint.getNorthDistance(userLatitude, userLongitude)
-            var EastPoint: Int = waypoint.getEastDistance(userLatitude, userLongitude)
+
+
+            val pointDistance = waypoint.getLinearDistance(userLatitude, userLongitude)
+            val pointEast = waypoint.getEastDistance(userLatitude, userLongitude)
+            val pointNorth = waypoint.getNorthDistance(userLatitude, userLongitude)
+            val MEast = Manpk.getEastDistance(userLatitude, userLongitude)
+            val MNorth = Manpk.getNorthDistance(userLatitude,userLongitude)
+            val MDis =  Manpk.getLinearDistance(userLatitude, userLongitude)
             textView.text =
-                "目標地点\n北方向 : ${NorthDistance}m\n東方向 : ${EastDistance}m\n通知開始ポイントまで\n北に${NorthPoint}m\n東に${EastPoint}m\n合計${pointDistance}m"
+                "目標地点\n北方向 : ${NorthDistance}m\n東方向 : ${EastDistance}m\n" +
+                        "通知開始ポイントまで\n北に${pointNorth}m\n東に${pointEast}m\n合計${pointDistance}m" +
+                        "\n飯屋まで\n北に${MNorth}m, 東に${MEast}m, 直線距離${MDis}m\n" +
+                        "測定開始までの距離: ${pointDistance}, 通過後の移動距離: $distanceAfterWaypoint m"
 //            textView.text = "北方向 : ${userLatitude}m, 東方向 : ${userLongitude}m"
 //            textView.text = "${destination1.calculateDistance(userLatitude,userLongitude)}"
-            if (pointDistance < 2) {
+            if ( MDis< 3) {
                 createNotification()
             }
+
             if (distance1 < 2) {
                 textView.text = "到着しました"
             }
