@@ -1,5 +1,6 @@
 package com.example.someday
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,20 +9,21 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Observer
 import kotlin.math.roundToInt
-
 class MainActivity : AppCompatActivity() {
     lateinit var textView: TextView
+    lateinit var imageView: ImageView
 
-    val destination1 = DestinationLocation(35.680420, 138.571538)
-    val waypoint = DestinationLocation(35.677837, 138.573188)
-    val Manpk = DestinationLocation(35.676020,138.572422)
-    var userLatitude: Double = 0.0
-    var userLongitude: Double = 0.0
+    private val destination1 = DestinationLocation(35.680420, 138.571538)
+    private val waypoint = DestinationLocation(35.677837, 138.573188)
+    private val Manpk = DestinationLocation(35.676020,138.572422)
+    private var userLatitude: Double = 0.0
+    private var userLongitude: Double = 0.0
 
     // LocationSensor を lateinit で宣言
     lateinit var locationSensor: LocationSensor
@@ -34,26 +36,26 @@ class MainActivity : AppCompatActivity() {
     // waypoint付近3mを通過した時点でのユーザーの位置情報
     private var waypointPassLocation: Location? = null
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        imageView = findViewById(R.id.picture)
+        imageView.setImageResource(R.drawable.sight)
+
         //通知を作成するより先に必ず実行
         createNotificationChannel()
 
         textView = findViewById(R.id.textview)
-
+//        imageView = findViewById(R.id.imageView3)
+//        imageView.setImageResource(R.drawable.img_4768)
         val distance1 = destination1.calculateDistance(userLatitude, userLongitude)
 
 
-//        val buttonNotification: Button = findViewById(R.id.buttonNotification)
-//        buttonNotification.setOnClickListener {
-//
-//        }
 
         locationSensor = LocationSensor(this)
         locationSensor.requestLocationPermission()
 
-//        stopButton.isEnabled = true
 
         locationSensor.location.observe(this, Observer {
             userLatitude = it.latitude
@@ -89,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                         "測定開始までの距離: ${pointDistance}, 通過後の移動距離: $distanceAfterWaypoint m"
 //            textView.text = "北方向 : ${userLatitude}m, 東方向 : ${userLongitude}m"
 //            textView.text = "${destination1.calculateDistance(userLatitude,userLongitude)}"
-            if ( MDis< 3) {
+            if ( MDis< 3 || isNearWaypoint) {
                 createNotification()
             }
 
