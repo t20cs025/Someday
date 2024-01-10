@@ -1,4 +1,5 @@
 package com.example.someday
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -20,7 +21,6 @@ class LocationSensor(private val activity: Activity) {
     private val _location: MutableLiveData<Location> = MutableLiveData()
     val location: LiveData<Location> = _location
 
-    var run: Boolean = false
 
     @SuppressLint("MissingPermission")
     fun start() {
@@ -42,9 +42,8 @@ class LocationSensor(private val activity: Activity) {
                 locationCallback as LocationCallback,
                 Looper.getMainLooper()
             )
-
         }
-        run = true
+//        run = true
     }
 
     fun requestLocationPermission() {
@@ -55,13 +54,6 @@ class LocationSensor(private val activity: Activity) {
         )
     }
 
-    fun stop() {
-        locationCallback?.let {
-            fusedLocationClient.removeLocationUpdates(it)
-            locationCallback = null
-        }
-        run = false
-    }
 
     private fun checkLocationPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(
@@ -73,4 +65,6 @@ class LocationSensor(private val activity: Activity) {
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
     }
+
+
 }
